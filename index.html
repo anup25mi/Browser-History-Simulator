@@ -1,0 +1,1318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Browser History Simulator | Java DSA Mini-Project</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-main: #0f172a;
+      --bg-card: #1e293b;
+      --bg-card-hover: #334155;
+      --text-primary: #f8fafc;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+      --border-color: #334155;
+      --border-light: #475569;
+      --accent-primary: #3b82f6;
+      --accent-primary-hover: #2563eb;
+      --accent-success: #10b981;
+      --accent-warning: #f59e0b;
+      --accent-danger: #ef4444;
+      --accent-purple: #8b5cf6;
+      --browser-bg: #1e293b;
+      --browser-bar-bg: #0f172a;
+      --browser-viewport-bg: #ffffff;
+      --font-main: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --font-mono: 'Fira Code', monospace;
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 16px;
+      --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+      --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+      --shadow-lg: 0 10px 25px -5px rgb(0 0 0 / 0.3), 0 8px 10px -6px rgb(0 0 0 / 0.3);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-main);
+      background-color: var(--bg-main);
+      color: var(--text-primary);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      line-height: 1.5;
+      overflow-x: hidden;
+    }
+    .app-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 28px;
+      background: rgba(30, 41, 59, 0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border-color);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+    .logo-area { display: flex; align-items: center; gap: 14px; }
+    .app-logo {
+      font-size: 26px;
+      background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+      width: 44px;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: var(--radius-md);
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+    }
+    .app-header h1 { font-size: 1.25rem; font-weight: 700; color: #fff; letter-spacing: -0.02em; }
+    .subtitle { font-size: 0.8rem; color: var(--text-secondary); }
+    .header-badges { display: flex; gap: 10px; }
+    .badge {
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 9999px;
+      letter-spacing: 0.02em;
+    }
+    .badge-dsa {
+      background: rgba(139, 92, 246, 0.2);
+      color: #c4b5fd;
+      border: 1px solid rgba(139, 92, 246, 0.4);
+    }
+    .badge-tech {
+      background: rgba(16, 185, 129, 0.2);
+      color: #6ee7b7;
+      border: 1px solid rgba(16, 185, 129, 0.4);
+    }
+    .main-layout {
+      display: grid;
+      grid-template-columns: 1.15fr 0.85fr;
+      gap: 24px;
+      padding: 24px;
+      flex: 1;
+      max-width: 1600px;
+      margin: 0 auto;
+      width: 100%;
+    }
+    .browser-container { display: flex; flex-direction: column; }
+    .browser-window {
+      background: var(--browser-bg);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      box-shadow: var(--shadow-lg);
+      display: flex;
+      flex-direction: column;
+      height: calc(100vh - 120px);
+      min-height: 620px;
+    }
+    .browser-titlebar {
+      background: #182234;
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      border-bottom: 1px solid var(--border-color);
+    }
+    .window-controls { display: flex; gap: 8px; }
+    .dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }
+    .dot-red { background: #ef4444; }
+    .dot-yellow { background: #f59e0b; }
+    .dot-green { background: #10b981; }
+    .tab-strip { display: flex; align-items: center; flex: 1; }
+    .tab {
+      background: var(--browser-bg);
+      color: var(--text-primary);
+      padding: 6px 16px;
+      border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.82rem;
+      font-weight: 500;
+      max-width: 240px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      border-top: 2px solid var(--accent-primary);
+    }
+    .browser-toolbar {
+      background: #182234;
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border-bottom: 1px solid var(--border-color);
+    }
+    .nav-buttons { display: flex; gap: 6px; }
+    .btn-nav {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-color);
+      color: var(--text-primary);
+      width: 36px;
+      height: 36px;
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .btn-nav:hover:not(:disabled) {
+      background: rgba(255, 255, 255, 0.12);
+      border-color: var(--border-light);
+      transform: translateY(-1px);
+    }
+    .btn-nav:disabled { opacity: 0.3; cursor: not-allowed; border-color: transparent; }
+    .address-bar-form { display: flex; flex: 1; gap: 8px; }
+    .address-bar {
+      display: flex;
+      align-items: center;
+      flex: 1;
+      background: #0f172a;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 0 12px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .address-bar:focus-within {
+      border-color: var(--accent-primary);
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
+    }
+    .lock-icon { font-size: 13px; margin-right: 8px; opacity: 0.7; }
+    .address-bar input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      color: #fff;
+      font-size: 0.88rem;
+      font-family: var(--font-mono);
+      padding: 8px 0;
+      outline: none;
+    }
+    .btn-clear-input {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 18px;
+      cursor: pointer;
+      padding: 0 4px;
+      line-height: 1;
+      display: none;
+    }
+    .btn-visit {
+      background: var(--accent-primary);
+      color: #fff;
+      border: none;
+      padding: 0 16px;
+      border-radius: var(--radius-md);
+      font-size: 0.88rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      transition: background-color 0.2s, transform 0.1s;
+    }
+    .btn-visit:hover { background: var(--accent-primary-hover); transform: translateY(-1px); }
+    .quick-bookmarks {
+      background: #131c2d;
+      padding: 8px 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border-bottom: 1px solid var(--border-color);
+      overflow-x: auto;
+    }
+    .quick-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      white-space: nowrap;
+    }
+    .pill {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-color);
+      color: var(--text-secondary);
+      font-size: 0.75rem;
+      font-weight: 500;
+      padding: 3px 10px;
+      border-radius: 9999px;
+      cursor: pointer;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+    .pill:hover {
+      background: rgba(59, 130, 246, 0.15);
+      color: #93c5fd;
+      border-color: rgba(59, 130, 246, 0.4);
+    }
+    .browser-viewport {
+      flex: 1;
+      background: #f8fafc;
+      color: #1e293b;
+      overflow-y: auto;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+    }
+    .viewport-placeholder {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px;
+    }
+    .welcome-card { max-width: 580px; text-align: center; }
+    .welcome-card h2 { font-size: 1.5rem; color: #0f172a; margin-bottom: 8px; font-weight: 700; }
+    .welcome-card > p { color: #475569; font-size: 0.95rem; margin-bottom: 24px; }
+    .welcome-features { display: flex; flex-direction: column; gap: 12px; text-align: left; }
+    .feature-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      background: #ffffff;
+      padding: 12px 16px;
+      border-radius: var(--radius-md);
+      border: 1px solid #e2e8f0;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.03);
+    }
+    .feature-item .icon { font-size: 20px; margin-top: 2px; }
+    .feature-item strong { font-size: 0.9rem; color: #1e293b; }
+    .feature-item p { font-size: 0.8rem; color: #64748b; margin-top: 2px; }
+    .feature-item code {
+      background: #f1f5f9;
+      color: #3b82f6;
+      padding: 1px 5px;
+      border-radius: 4px;
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+    }
+    .simulated-page { padding: 30px; animation: fadeIn 0.25s ease-out; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+    .sim-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid #e2e8f0;
+      padding-bottom: 16px;
+      margin-bottom: 24px;
+    }
+    .sim-domain-tag { display: flex; align-items: center; gap: 8px; }
+    .sim-domain-name { font-size: 1.15rem; font-weight: 700; color: #0f172a; }
+    .sim-badge-200 {
+      background: #dcfce7;
+      color: #15803d;
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 9999px;
+      border: 1px solid #86efac;
+    }
+    .google-mock { display: flex; flex-direction: column; align-items: center; padding-top: 30px; }
+    .google-logo { font-size: 42px; font-weight: 700; letter-spacing: -1px; margin-bottom: 24px; }
+    .google-logo span:nth-child(1) { color: #4285f4; }
+    .google-logo span:nth-child(2) { color: #ea4335; }
+    .google-logo span:nth-child(3) { color: #fbbc05; }
+    .google-logo span:nth-child(4) { color: #4285f4; }
+    .google-logo span:nth-child(5) { color: #34a853; }
+    .google-logo span:nth-child(6) { color: #ea4335; }
+    .google-search-box {
+      width: 100%;
+      max-width: 500px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border: 1px solid #dfe1e5;
+      border-radius: 24px;
+      padding: 10px 18px;
+      background: #fff;
+      box-shadow: 0 1px 6px rgba(32,33,36,.28);
+      margin-bottom: 20px;
+    }
+    .google-search-box input { border: none; outline: none; font-size: 0.95rem; width: 100%; }
+    .google-buttons { display: flex; gap: 12px; }
+    .google-btn {
+      background: #f8f9fa;
+      border: 1px solid #f8f9fa;
+      color: #3c4043;
+      padding: 8px 16px;
+      font-size: 0.85rem;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .youtube-mock { padding: 10px 0; }
+    .yt-banner {
+      background: #cc0000;
+      color: #fff;
+      padding: 14px 20px;
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 700;
+      margin-bottom: 20px;
+    }
+    .yt-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; }
+    .yt-card { background: #fff; border: 1px solid #e2e8f0; border-radius: var(--radius-md); overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.04); }
+    .yt-thumb {
+      height: 110px;
+      background: linear-gradient(135deg, #1e293b, #334155);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: 28px;
+    }
+    .yt-info { padding: 12px; }
+    .yt-info h4 { font-size: 0.85rem; color: #0f172a; margin-bottom: 4px; }
+    .yt-info p { font-size: 0.75rem; color: #64748b; }
+    .github-mock { background: #0d1117; color: #c9d1d9; border-radius: var(--radius-md); padding: 24px; }
+    .gh-repo-header { display: flex; align-items: center; gap: 10px; font-size: 1.1rem; margin-bottom: 16px; }
+    .gh-badge { background: #21262d; color: #8b949e; font-size: 0.72rem; padding: 2px 8px; border-radius: 12px; border: 1px solid #30363d; }
+    .gh-files-box { background: #161b22; border: 1px solid #30363d; border-radius: 6px; overflow: hidden; }
+    .gh-file-row {
+      display: flex;
+      align-items: center;
+      padding: 10px 14px;
+      border-bottom: 1px solid #21262d;
+      font-size: 0.85rem;
+      font-family: var(--font-mono);
+      gap: 10px;
+    }
+    .gh-file-row:last-child { border-bottom: none; }
+    .generic-mock-card {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: var(--radius-lg);
+      padding: 28px;
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+    }
+    .generic-mock-card h3 { color: #0f172a; font-size: 1.3rem; margin-bottom: 10px; }
+    .generic-meta-info {
+      margin-top: 18px;
+      padding: 12px;
+      background: #f1f5f9;
+      border-radius: var(--radius-md);
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      color: #334155;
+    }
+    .browser-statusbar {
+      background: #182234;
+      padding: 6px 16px;
+      border-top: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+    }
+    .status-left { display: flex; align-items: center; gap: 6px; }
+    .status-dot { width: 8px; height: 8px; border-radius: 50%; }
+    .status-dot.online { background: var(--accent-success); box-shadow: 0 0 6px var(--accent-success); }
+    #statusCurrentUrl { color: #93c5fd; font-family: var(--font-mono); }
+    .dashboard-sidebar {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      display: flex;
+      flex-direction: column;
+      box-shadow: var(--shadow-lg);
+      overflow: hidden;
+      height: calc(100vh - 120px);
+      min-height: 620px;
+    }
+    .sidebar-tabs { display: flex; background: #131c2d; border-bottom: 1px solid var(--border-color); }
+    .tab-btn {
+      flex: 1;
+      background: transparent;
+      border: none;
+      color: var(--text-secondary);
+      padding: 14px 12px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.2s;
+      border-bottom: 2px solid transparent;
+    }
+    .tab-btn:hover { color: var(--text-primary); background: rgba(255, 255, 255, 0.03); }
+    .tab-btn.active { color: #60a5fa; background: var(--bg-card); border-bottom-color: var(--accent-primary); }
+    .panel-content { display: none; flex: 1; flex-direction: column; padding: 20px; overflow-y: auto; }
+    .panel-content.active { display: flex; }
+    .panel-header { margin-bottom: 16px; }
+    .panel-header h3 { font-size: 1.05rem; font-weight: 700; color: #fff; }
+    .panel-desc { font-size: 0.78rem; color: var(--text-muted); margin-top: 2px; }
+    .panel-desc code { color: #93c5fd; font-family: var(--font-mono); }
+    .dsa-stacks-container { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+    .stack-box {
+      background: #131c2d;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+    }
+    .stack-header { margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+    .stack-title { display: flex; justify-content: space-between; align-items: center; }
+    .stack-badge {
+      font-size: 0.78rem;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 6px;
+      background: rgba(59, 130, 246, 0.2);
+      color: #60a5fa;
+      border: 1px solid rgba(59, 130, 246, 0.3);
+    }
+    .forward-badge { background: rgba(139, 92, 246, 0.2); color: #c4b5fd; border: 1px solid rgba(139, 92, 246, 0.3); }
+    .stack-size { font-size: 0.8rem; font-weight: 700; background: #1e293b; color: var(--text-secondary); padding: 2px 7px; border-radius: 9999px; }
+    .stack-op-hint { font-size: 0.7rem; color: var(--text-muted); display: block; margin-top: 4px; }
+    .stack-visual {
+      min-height: 160px;
+      max-height: 240px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 4px;
+    }
+    .stack-empty { margin: auto; font-size: 0.8rem; color: var(--text-muted); font-style: italic; }
+    .stack-item {
+      background: #1e293b;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      padding: 8px 10px;
+      font-size: 0.78rem;
+      font-family: var(--font-mono);
+      color: #e2e8f0;
+      word-break: break-all;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      animation: slideInDown 0.2s ease-out;
+    }
+    @keyframes slideInDown { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+    .stack-item.is-top { border-color: #60a5fa; background: #1e3a5f; box-shadow: 0 0 10px rgba(59, 130, 246, 0.25); }
+    .top-tag { font-size: 0.65rem; font-weight: 700; background: #3b82f6; color: #fff; padding: 1px 5px; border-radius: 4px; }
+    .current-node-box {
+      grid-column: span 2;
+      background: rgba(16, 185, 129, 0.08);
+      border: 1px dashed rgba(16, 185, 129, 0.4);
+      border-radius: var(--radius-md);
+      padding: 12px;
+      text-align: center;
+    }
+    .current-pointer-label { font-size: 0.7rem; font-weight: 700; color: #34d399; letter-spacing: 0.06em; margin-bottom: 6px; }
+    .current-node-card { font-family: var(--font-mono); font-size: 0.88rem; color: #fff; font-weight: 600; word-break: break-all; }
+    .dsa-theory-card { background: #131c2d; border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 14px; margin-top: auto; }
+    .dsa-theory-card h4 { font-size: 0.82rem; color: #fbbf24; margin-bottom: 8px; }
+    .dsa-theory-card ul { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+    .dsa-theory-card li { font-size: 0.75rem; color: var(--text-secondary); line-height: 1.4; }
+    .dsa-theory-card code { color: #93c5fd; font-family: var(--font-mono); background: rgba(255, 255, 255, 0.05); padding: 1px 4px; border-radius: 3px; }
+    .history-header { display: flex; justify-content: space-between; align-items: flex-start; }
+    .btn-clear-history {
+      background: rgba(239, 68, 68, 0.15);
+      color: #fca5a5;
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      padding: 6px 12px;
+      border-radius: var(--radius-sm);
+      font-size: 0.78rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+    .btn-clear-history:hover { background: var(--accent-danger); color: #fff; }
+    .history-table-container { flex: 1; overflow-y: auto; border: 1px solid var(--border-color); border-radius: var(--radius-md); background: #131c2d; }
+    .history-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.8rem; }
+    .history-table th {
+      background: #182234;
+      color: var(--text-secondary);
+      font-weight: 600;
+      padding: 10px 12px;
+      position: sticky;
+      top: 0;
+      border-bottom: 1px solid var(--border-color);
+    }
+    .history-table td {
+      padding: 10px 12px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      color: var(--text-primary);
+      font-family: var(--font-mono);
+      font-size: 0.76rem;
+    }
+    .history-table tr:hover td { background: rgba(255, 255, 255, 0.02); }
+    .history-table tr.is-active-row td { background: rgba(59, 130, 246, 0.15); color: #93c5fd; font-weight: 600; }
+    .table-empty { text-align: center; padding: 40px 20px !important; color: var(--text-muted) !important; font-style: italic; }
+    .toast-container { position: fixed; bottom: 24px; right: 24px; display: flex; flex-direction: column; gap: 10px; z-index: 9999; }
+    .toast {
+      background: #1e293b;
+      border: 1px solid var(--border-color);
+      color: #fff;
+      padding: 12px 18px;
+      border-radius: var(--radius-md);
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.4);
+      font-size: 0.85rem;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      animation: toastSlideIn 0.3s ease-out;
+      max-width: 380px;
+    }
+    @keyframes toastSlideIn { from { opacity: 0; transform: translateX(50px); } to { opacity: 1; transform: translateX(0); } }
+    .toast.toast-success { border-left: 4px solid var(--accent-success); }
+    .toast.toast-error { border-left: 4px solid var(--accent-danger); }
+    .toast.toast-info { border-left: 4px solid var(--accent-primary); }
+    @media (max-width: 1024px) {
+      .main-layout { grid-template-columns: 1fr; }
+      .browser-window, .dashboard-sidebar { height: auto; min-height: 520px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- App Header -->
+  <header class="app-header">
+    <div class="logo-area">
+      <div class="app-logo">🌐</div>
+      <div>
+        <h1>Browser History Simulator</h1>
+      </div>
+    </div>
+    <div class="header-badges">
+      <span class="badge badge-tech" id="engineBadge">Instant Simulator Active</span>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="main-layout">
+
+    <!-- Browser Window Simulator -->
+    <section class="browser-container">
+      <div class="browser-window">
+        
+        <!-- Browser Titlebar & Tabs -->
+        <div class="browser-titlebar">
+          <div class="window-controls">
+            <span class="dot dot-red"></span>
+            <span class="dot dot-yellow"></span>
+            <span class="dot dot-green"></span>
+          </div>
+          <div class="tab-strip">
+            <div class="tab active-tab" id="activeTab">
+              <span class="tab-icon" id="tabIcon">🌐</span>
+              <span class="tab-title" id="tabTitle">Home Page</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Navigation Toolbar -->
+        <div class="browser-toolbar">
+          <div class="nav-buttons">
+            <button id="btnBack" class="btn-nav" title="Go Back (Pop BackStack)" disabled>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+            </button>
+            <button id="btnForward" class="btn-nav" title="Go Forward (Pop ForwardStack)" disabled>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+            </button>
+            <button id="btnRefresh" class="btn-nav" title="Refresh Page">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+            </button>
+          </div>
+
+          <!-- URL Address Bar -->
+          <form id="urlForm" class="address-bar-form" autocomplete="off">
+            <div class="address-bar">
+              <span class="lock-icon">🔒</span>
+              <input 
+                type="text" 
+                id="urlInput" 
+                placeholder="Enter URL (e.g. google.com, youtube.com, github.com)..." 
+                spellcheck="false"
+              />
+              <button type="button" id="btnClearInput" class="btn-clear-input" title="Clear">&times;</button>
+            </div>
+            <button type="submit" id="btnVisit" class="btn-visit">
+              <span>Visit</span>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+            </button>
+          </form>
+        </div>
+
+        <!-- Quick Bookmark Pills for Testing Sequence -->
+        <div class="quick-bookmarks">
+          <span class="quick-label">⚡ Quick Test:</span>
+          <button class="pill" data-url="google.com">Google</button>
+          <button class="pill" data-url="youtube.com">YouTube</button>
+          <button class="pill" data-url="github.com">GitHub</button>
+          <button class="pill" data-url="wikipedia.org">Wikipedia</button>
+          <button class="pill" data-url="stackoverflow.com">StackOverflow</button>
+        </div>
+
+        <!-- Content Viewport -->
+        <div class="browser-viewport" id="viewport">
+          <div class="viewport-placeholder">
+            <div class="welcome-card">
+              <h2>Welcome to Browser History Simulator!</h2>
+              <p>Type any web address above or click the Quick Test buttons to test the navigation stacks.</p>
+              <div class="welcome-features">
+                <div class="feature-item">
+                  <span class="icon">⏮️</span>
+                  <div>
+                    <strong>Back Button</strong>
+                    <p>Pops previous page from <code>BackStack</code> and pushes active page to <code>ForwardStack</code>.</p>
+                  </div>
+                </div>
+                <div class="feature-item">
+                  <span class="icon">⏭️</span>
+                  <div>
+                    <strong>Forward Button</strong>
+                    <p>Pops next page from <code>ForwardStack</code> and pushes active page to <code>BackStack</code>.</p>
+                  </div>
+                </div>
+                <div class="feature-item">
+                  <span class="icon">🥞</span>
+                  <div>
+                    <strong>Two-Stack DSA (LIFO)</strong>
+                    <p>Manual Linked-List Stacks operating in <code>O(1)</code> time with live visualization.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Status Bar -->
+        <div class="browser-statusbar">
+          <div class="status-left">
+            <span class="status-dot online"></span>
+            <span id="statusText">Ready</span>
+          </div>
+          <div class="status-right">
+            <span>Current: <strong id="statusCurrentUrl">about:blank</strong></span>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Sidebar: Live DSA Visualizer & History Panel -->
+    <aside class="dashboard-sidebar">
+
+      <div class="sidebar-tabs">
+        <button class="tab-btn active" id="tabDsaBtn" data-target="dsaPanel">
+          🥞 DSA Stack Visualizer
+        </button>
+        <button class="tab-btn" id="tabHistoryBtn" data-target="historyPanel">
+          🗄️ History Log (<span id="historyCountBadge">0</span>)
+        </button>
+      </div>
+
+      <!-- Panel 1: DSA Stacks -->
+      <div id="dsaPanel" class="panel-content active">
+        <div class="panel-header">
+          <h3>Custom Two-Stack Data Structure</h3>
+          <p class="panel-desc">Real-time memory view of <code>BackStack</code> and <code>ForwardStack</code>.</p>
+        </div>
+
+        <div class="dsa-stacks-container">
+          
+          <!-- Back Stack -->
+          <div class="stack-box back-stack-box">
+            <div class="stack-header">
+              <div class="stack-title">
+                <span class="stack-badge">Back Stack</span>
+                <span class="stack-size" id="backStackSize">0</span>
+              </div>
+              <span class="stack-op-hint">Pops when &larr; Back is clicked</span>
+            </div>
+            <div class="stack-visual" id="backStackVisual">
+              <div class="stack-empty">Stack is empty</div>
+            </div>
+          </div>
+
+          <!-- Current Node -->
+          <div class="current-node-box">
+            <div class="current-pointer-label">📍 CURRENT ACTIVE WEBPAGE</div>
+            <div class="current-node-card" id="currentNodeDisplay">
+              <span class="current-node-url">about:blank</span>
+            </div>
+          </div>
+
+          <!-- Forward Stack -->
+          <div class="stack-box forward-stack-box">
+            <div class="stack-header">
+              <div class="stack-title">
+                <span class="stack-badge forward-badge">Forward Stack</span>
+                <span class="stack-size" id="forwardStackSize">0</span>
+              </div>
+              <span class="stack-op-hint">Pops when Forward &rarr; is clicked</span>
+            </div>
+            <div class="stack-visual" id="forwardStackVisual">
+              <div class="stack-empty">Stack is empty</div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- Panel 2: History Log Table -->
+      <div id="historyPanel" class="panel-content">
+        <div class="panel-header history-header">
+          <div>
+            <h3>Browsing History Log</h3>
+            <p class="panel-desc">All visits recorded with IDs and timestamps</p>
+          </div>
+          <button id="btnClearHistory" class="btn-clear-history" title="Clear all history">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+            Clear History
+          </button>
+        </div>
+
+        <div class="history-table-container">
+          <table class="history-table">
+            <thead>
+              <tr>
+                <th width="15%">ID</th>
+                <th width="50%">Visited URL</th>
+                <th width="35%">Visited At</th>
+              </tr>
+            </thead>
+            <tbody id="historyTableBody">
+              <tr>
+                <td colspan="3" class="table-empty">No browsing history yet. Visit a webpage to record history!</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </aside>
+
+  </main>
+
+  <div id="toastContainer" class="toast-container"></div>
+
+  <!-- JavaScript DSA Engine & Client Controller -->
+  <script>
+    // --- Custom DSA Implementation ---
+    class CustomNode {
+      constructor(url) {
+        this.url = url;
+        this.next = null;
+      }
+    }
+
+    class CustomStack {
+      constructor(name) {
+        this.name = name;
+        this.top = null;
+        this.count = 0;
+      }
+
+      push(url) {
+        if (!url || !url.trim()) return;
+        const newNode = new CustomNode(url.trim());
+        newNode.next = this.top;
+        this.top = newNode;
+        this.count++;
+      }
+
+      pop() {
+        if (this.isEmpty()) return null;
+        const poppedUrl = this.top.url;
+        this.top = this.top.next;
+        this.count--;
+        return poppedUrl;
+      }
+
+      peek() {
+        if (this.isEmpty()) return null;
+        return this.top.url;
+      }
+
+      isEmpty() {
+        return this.top === null;
+      }
+
+      size() {
+        return this.count;
+      }
+
+      clear() {
+        this.top = null;
+        this.count = 0;
+      }
+
+      toList() {
+        const list = [];
+        let current = this.top;
+        while (current !== null) {
+          list.push(current.url);
+          current = current.next;
+        }
+        return list;
+      }
+    }
+
+    // State
+    const backStack = new CustomStack('Back');
+    const forwardStack = new CustomStack('Forward');
+    let currentPage = 'about:blank';
+    let historyList = [];
+    let historyId = 1;
+
+    // DOM References
+    const btnBack = document.getElementById('btnBack');
+    const btnForward = document.getElementById('btnForward');
+    const btnRefresh = document.getElementById('btnRefresh');
+    const urlForm = document.getElementById('urlForm');
+    const urlInput = document.getElementById('urlInput');
+    const btnClearInput = document.getElementById('btnClearInput');
+    const viewport = document.getElementById('viewport');
+    const tabTitle = document.getElementById('tabTitle');
+    const tabIcon = document.getElementById('tabIcon');
+    const statusText = document.getElementById('statusText');
+    const statusCurrentUrl = document.getElementById('statusCurrentUrl');
+
+    const backStackVisual = document.getElementById('backStackVisual');
+    const forwardStackVisual = document.getElementById('forwardStackVisual');
+    const backStackSize = document.getElementById('backStackSize');
+    const forwardStackSize = document.getElementById('forwardStackSize');
+    const currentNodeDisplay = document.getElementById('currentNodeDisplay');
+
+    const historyTableBody = document.getElementById('historyTableBody');
+    const historyCountBadge = document.getElementById('historyCountBadge');
+    const btnClearHistory = document.getElementById('btnClearHistory');
+
+    const tabDsaBtn = document.getElementById('tabDsaBtn');
+    const tabHistoryBtn = document.getElementById('tabHistoryBtn');
+    const dsaPanel = document.getElementById('dsaPanel');
+    const historyPanel = document.getElementById('historyPanel');
+
+    // Init
+    document.addEventListener('DOMContentLoaded', () => {
+      setupEventListeners();
+      updateUI();
+    });
+
+    function setupEventListeners() {
+      urlForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const raw = urlInput.value.trim();
+        if (!raw) {
+          showToast('Please enter a website URL.', 'error');
+          urlInput.focus();
+          return;
+        }
+        visit(raw);
+      });
+
+      btnBack.addEventListener('click', goBack);
+      btnForward.addEventListener('click', goForward);
+
+      btnRefresh.addEventListener('click', () => {
+        if (currentPage && currentPage !== 'about:blank') {
+          showToast(`Refreshing ${currentPage}...`, 'info');
+          renderSimulatedPage(currentPage);
+        }
+      });
+
+      urlInput.addEventListener('input', () => {
+        btnClearInput.style.display = urlInput.value ? 'block' : 'none';
+      });
+
+      btnClearInput.addEventListener('click', () => {
+        urlInput.value = '';
+        btnClearInput.style.display = 'none';
+        urlInput.focus();
+      });
+
+      document.querySelectorAll('.pill').forEach(pill => {
+        pill.addEventListener('click', () => {
+          const u = pill.getAttribute('data-url');
+          urlInput.value = u;
+          btnClearInput.style.display = 'block';
+          visit(u);
+        });
+      });
+
+      btnClearHistory.addEventListener('click', () => {
+        if (confirm('Clear all browsing history and reset session stacks?')) {
+          clearHistory();
+        }
+      });
+
+      tabDsaBtn.addEventListener('click', () => {
+        tabDsaBtn.classList.add('active');
+        tabHistoryBtn.classList.remove('active');
+        dsaPanel.classList.add('active');
+        historyPanel.classList.remove('active');
+      });
+
+      tabHistoryBtn.addEventListener('click', () => {
+        tabHistoryBtn.classList.add('active');
+        tabDsaBtn.classList.remove('active');
+        historyPanel.classList.add('active');
+        dsaPanel.classList.remove('active');
+      });
+    }
+
+    // --- Core Navigation Algorithm ---
+    function normalizeUrl(u) {
+      let trimmed = u.trim();
+      if (trimmed.toLowerCase() === 'about:blank') return 'about:blank';
+      if (!trimmed.startsWith('http://') && !trimmed.startsWith('https://')) {
+        return 'https://' + trimmed;
+      }
+      return trimmed;
+    }
+
+    function visit(rawUrl) {
+      const url = normalizeUrl(rawUrl);
+
+      // 1. Push current page to Back Stack (if not about:blank)
+      if (currentPage && currentPage !== 'about:blank') {
+        backStack.push(currentPage);
+      }
+
+      // 2. Set new URL as current page
+      currentPage = url;
+
+      // 3. Clear Forward Stack
+      forwardStack.clear();
+
+      // 4. Save history entry
+      const now = new Date();
+      historyList.unshift({
+        id: historyId++,
+        url: url,
+        visitedAt: now.toLocaleString()
+      });
+
+      updateUI();
+      showToast(`Loaded: ${url}`, 'success');
+    }
+
+    function goBack() {
+      if (backStack.isEmpty()) {
+        showToast('Cannot go back: Back Stack is empty!', 'error');
+        return;
+      }
+
+      // Push current page onto Forward Stack
+      forwardStack.push(currentPage);
+
+      // Pop previous URL from Back Stack
+      currentPage = backStack.pop();
+
+      updateUI();
+      showToast(`Navigated back to ${currentPage}`, 'info');
+    }
+
+    function goForward() {
+      if (forwardStack.isEmpty()) {
+        showToast('Cannot go forward: Forward Stack is empty!', 'error');
+        return;
+      }
+
+      // Push current page onto Back Stack
+      backStack.push(currentPage);
+
+      // Pop next URL from Forward Stack
+      currentPage = forwardStack.pop();
+
+      updateUI();
+      showToast(`Navigated forward to ${currentPage}`, 'info');
+    }
+
+    function clearHistory() {
+      backStack.clear();
+      forwardStack.clear();
+      currentPage = 'about:blank';
+      historyList = [];
+      updateUI();
+      showToast('All browsing history and stacks cleared.', 'success');
+    }
+
+    // --- UI Updates ---
+    function updateUI() {
+      btnBack.disabled = backStack.isEmpty();
+      btnForward.disabled = forwardStack.isEmpty();
+
+      if (currentPage !== 'about:blank') {
+        urlInput.value = currentPage;
+        btnClearInput.style.display = 'block';
+      } else {
+        urlInput.value = '';
+        btnClearInput.style.display = 'none';
+      }
+
+      statusCurrentUrl.textContent = currentPage;
+
+      updateTabAndViewport(currentPage);
+      renderStacks();
+      renderHistoryTable();
+    }
+
+    function updateTabAndViewport(url) {
+      if (!url || url === 'about:blank') {
+        tabTitle.textContent = 'Home Page';
+        tabIcon.textContent = '🌐';
+        viewport.innerHTML = `
+          <div class="viewport-placeholder">
+            <div class="welcome-card">
+              <h2>Welcome to Browser History Simulator!</h2>
+              <p>Type any web address above or click the Quick Test buttons to test the navigation stacks.</p>
+              <div class="welcome-features">
+                <div class="feature-item">
+                  <span class="icon">⏮️</span>
+                  <div>
+                    <strong>Back Button</strong>
+                    <p>Pops previous page from <code>BackStack</code> and pushes active page to <code>ForwardStack</code>.</p>
+                  </div>
+                </div>
+                <div class="feature-item">
+                  <span class="icon">⏭️</span>
+                  <div>
+                    <strong>Forward Button</strong>
+                    <p>Pops next page from <code>ForwardStack</code> and pushes active page to <code>BackStack</code>.</p>
+                  </div>
+                </div>
+                <div class="feature-item">
+                  <span class="icon">🥞</span>
+                  <div>
+                    <strong>Two-Stack DSA (LIFO)</strong>
+                    <p>Manual Linked-List Stacks operating in <code>O(1)</code> time with live visualization.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      renderSimulatedPage(url);
+    }
+
+    function renderSimulatedPage(url) {
+      const parsed = getDomainDetails(url);
+      tabTitle.textContent = parsed.title;
+      tabIcon.textContent = parsed.icon;
+
+      let html = '';
+      if (parsed.domain.includes('google')) {
+        html = `
+          <div class="simulated-page google-mock">
+            <div class="google-logo">
+              <span>G</span><span>o</span><span>o</span><span>g</span><span>l</span><span>e</span>
+            </div>
+            <div class="google-search-box">
+              <span>🔍</span>
+              <input type="text" value="Java DSA Browser History Simulator" readonly />
+              <span>🎤</span>
+            </div>
+            <div class="google-buttons">
+              <button class="google-btn">Google Search</button>
+              <button class="google-btn">I'm Feeling Lucky</button>
+            </div>
+          </div>
+        `;
+      } else if (parsed.domain.includes('youtube')) {
+        html = `
+          <div class="simulated-page youtube-mock">
+            <div class="yt-banner"><span>▶️</span> YouTube Video Stream</div>
+            <div class="yt-grid">
+              <div class="yt-card">
+                <div class="yt-thumb">📹</div>
+                <div class="yt-info">
+                  <h4>Java Stacks & Queues Explained</h4>
+                  <p>College DSA Tutorial &bull; 100K views</p>
+                </div>
+              </div>
+              <div class="yt-card">
+                <div class="yt-thumb">💻</div>
+                <div class="yt-info">
+                  <h4>Spring Boot + MySQL Full Course</h4>
+                  <p>FreeCodeCamp &bull; 450K views</p>
+                </div>
+              </div>
+              <div class="yt-card">
+                <div class="yt-thumb">🚀</div>
+                <div class="yt-info">
+                  <h4>How Browser History Works (DSA)</h4>
+                  <p>Tech Prep &bull; 89K views</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      } else if (parsed.domain.includes('github')) {
+        html = `
+          <div class="simulated-page github-mock">
+            <div class="gh-repo-header">
+              <span>📂</span>
+              <strong>student / browser-history-simulator</strong>
+              <span class="gh-badge">Public</span>
+            </div>
+            <div class="gh-files-box">
+              <div class="gh-file-row"><span>📁</span> src/main/java/com/example/browserhistory/dsa/BackStack.java</div>
+              <div class="gh-file-row"><span>📁</span> src/main/java/com/example/browserhistory/dsa/ForwardStack.java</div>
+              <div class="gh-file-row"><span>📁</span> src/main/java/com/example/browserhistory/service/BrowserNavigationService.java</div>
+              <div class="gh-file-row"><span>📄</span> pom.xml</div>
+              <div class="gh-file-row"><span>📄</span> README.md</div>
+            </div>
+          </div>
+        `;
+      } else {
+        html = `
+          <div class="simulated-page">
+            <div class="generic-mock-card">
+              <div class="sim-header">
+                <div class="sim-domain-tag">
+                  <span class="sim-favicon">${parsed.icon}</span>
+                  <span class="sim-domain-name">${parsed.domain}</span>
+                </div>
+                <span class="sim-badge-200">HTTP 200 OK</span>
+              </div>
+              <h3>${parsed.title}</h3>
+              <p style="color: #475569; margin-top: 8px;">
+                Simulated webpage loaded successfully into the simulator viewport.
+              </p>
+              <div class="generic-meta-info">
+                <div><strong>Full URL:</strong> ${url}</div>
+                <div><strong>Protocol:</strong> HTTPS (Encrypted Local Simulation)</div>
+                <div><strong>Loaded:</strong> ${new Date().toLocaleTimeString()}</div>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+      viewport.innerHTML = html;
+    }
+
+    function getDomainDetails(url) {
+      let domain = url.replace(/^(https?:\/\/)?(www\.)?/, '').split('/')[0];
+      let title = domain;
+      let icon = '🌐';
+
+      if (domain.includes('google')) {
+        title = 'Google Search'; icon = '🔍';
+      } else if (domain.includes('youtube')) {
+        title = 'YouTube'; icon = '▶️';
+      } else if (domain.includes('github')) {
+        title = 'GitHub'; icon = '🐙';
+      } else if (domain.includes('wikipedia')) {
+        title = 'Wikipedia'; icon = '📚';
+      } else if (domain.includes('stackoverflow')) {
+        title = 'Stack Overflow'; icon = '🥞';
+      }
+      return { domain, title, icon };
+    }
+
+    function renderStacks() {
+      backStackSize.textContent = backStack.size();
+      renderStackList(backStackVisual, backStack.toList(), 'Back');
+
+      currentNodeDisplay.innerHTML = `<span class="current-node-url">${currentPage}</span>`;
+
+      forwardStackSize.textContent = forwardStack.size();
+      renderStackList(forwardStackVisual, forwardStack.toList(), 'Forward');
+    }
+
+    function renderStackList(container, items, type) {
+      if (!items || items.length === 0) {
+        container.innerHTML = `<div class="stack-empty">${type} Stack is empty</div>`;
+        return;
+      }
+      let html = '';
+      items.forEach((u, idx) => {
+        const isTop = idx === 0;
+        html += `
+          <div class="stack-item ${isTop ? 'is-top' : ''}">
+            <span title="${u}">${truncate(u, 26)}</span>
+            ${isTop ? '<span class="top-tag">TOP</span>' : ''}
+          </div>
+        `;
+      });
+      container.innerHTML = html;
+    }
+
+    function renderHistoryTable() {
+      historyCountBadge.textContent = historyList.length;
+
+      if (historyList.length === 0) {
+        historyTableBody.innerHTML = `
+          <tr>
+            <td colspan="3" class="table-empty">No browsing history yet. Visit a webpage to record history!</td>
+          </tr>
+        `;
+        return;
+      }
+
+      let html = '';
+      historyList.forEach(item => {
+        const isActive = item.url === currentPage;
+        html += `
+          <tr class="${isActive ? 'is-active-row' : ''}">
+            <td>#${item.id}</td>
+            <td title="${item.url}">
+              <a href="javascript:void(0)" onclick="quickVisit('${item.url}')" style="color: inherit; text-decoration: none;">
+                ${truncate(item.url, 42)}
+                ${isActive ? ' <span style="font-size: 0.7rem; color: #60a5fa;">(Current)</span>' : ''}
+              </a>
+            </td>
+            <td style="color: #94a3b8;">${item.visitedAt}</td>
+          </tr>
+        `;
+      });
+      historyTableBody.innerHTML = html;
+    }
+
+    window.quickVisit = function(u) {
+      urlInput.value = u;
+      btnClearInput.style.display = 'block';
+      visit(u);
+    };
+
+    function truncate(str, maxLen) {
+      if (!str) return '';
+      return str.length > maxLen ? str.substring(0, maxLen - 3) + '...' : str;
+    }
+
+    function showToast(msg, type = 'info') {
+      const c = document.getElementById('toastContainer');
+      const t = document.createElement('div');
+      t.className = `toast toast-${type}`;
+      let icon = 'ℹ️';
+      if (type === 'success') icon = '✅';
+      if (type === 'error') icon = '⚠️';
+      t.innerHTML = `<span>${icon}</span> <span>${msg}</span>`;
+      c.appendChild(t);
+      setTimeout(() => {
+        t.style.opacity = '0';
+        t.style.transform = 'translateX(50px)';
+        t.style.transition = 'all 0.3s ease';
+        setTimeout(() => t.remove(), 300);
+      }, 3000);
+    }
+  </script>
+</body>
+</html>
